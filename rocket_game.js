@@ -1,8 +1,6 @@
-
-
 const GAME_SCALE = 0.65;
 let VELOCITY_SCALE = 0.4; 
-const BG_STAR_COUNT = 160;
+const BG_STAR_COUNT = 170;
 
 class Ship {
     constructor() {
@@ -38,13 +36,13 @@ class Ship {
 
     update(keys) {
         // Rotation
-        const rotSpeed = 0.3 * VELOCITY_SCALE;
+        const rotSpeed = 0.27 * VELOCITY_SCALE;
         if (keys.ArrowLeft) this.angle -= rotSpeed;
         if (keys.ArrowRight) this.angle += rotSpeed;
 
         // Thrust
         if (keys.ArrowUp) {
-            const thrust = 2 * VELOCITY_SCALE;
+            const thrust = 1 * VELOCITY_SCALE;
             this.vx += Math.cos(this.angle) * thrust;
             this.vy += Math.sin(this.angle) * thrust;
             this.thrusting = true;
@@ -60,7 +58,7 @@ class Ship {
         this.vy *= 0.991;
 
         // Max speed
-        const maxSpeed = 17 * VELOCITY_SCALE;
+        const maxSpeed = 15 * VELOCITY_SCALE;
         this.vx = Math.max(-maxSpeed, Math.min(maxSpeed, this.vx));
         this.vy = Math.max(-maxSpeed, Math.min(maxSpeed, this.vy));
 
@@ -135,8 +133,8 @@ class Ship {
 class Obstacle {
     constructor(spawnX) {
         this.worldX = spawnX;
-        const baseW = Math.random() * 90 + 90;
-        const baseH = Math.random() * 90 + 90;
+        const baseW = Math.random() * 80 + 80;
+        const baseH = Math.random() * 80 + 80;
         this.width = baseW * GAME_SCALE;
         this.height = baseH * GAME_SCALE;
         this.screenY = Math.random() * (innerHeight - this.height);
@@ -282,10 +280,14 @@ function loop(time) {
             lives--;
             if (lives <= 0) gameOver = true;
         }
+                if (ship.screenx - ship.halfH <= 0) {
+            lives--;
+            if (lives <= 0) gameOver = true;
+        }
 
-        // Spawn obstacles (less frequent: higher base rate)
-        obsSpawnTimer += 0.5 * VELOCITY_SCALE;
-        const spawnRate = Math.max(35 - (level * 3.5), 15);
+        
+        obsSpawnTimer += 0.8 * VELOCITY_SCALE;
+        let spawnRate = Math.max(35 - (level * 3.5), 15);
         if (obsSpawnTimer > spawnRate) {
             const spawnX = ship.camX + canvas.width + (Math.random() * 100 + 50);
             obstacles.push(new Obstacle(spawnX));

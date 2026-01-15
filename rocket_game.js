@@ -68,7 +68,6 @@ class Ship {
         this.worldX += this.vx;
         this.screenY += this.vy;
 
-        // Camera follows horizontally
         this.camX = Math.max(0, this.worldX - innerWidth / 2);
         this.shipScreenX = this.worldX - this.camX;
 

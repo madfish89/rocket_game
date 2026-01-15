@@ -135,8 +135,8 @@ class Ship {
 class Obstacle {
     constructor(spawnX) {
         this.worldX = spawnX;
-        const baseW = Math.random() * 80 + 80;
-        const baseH = Math.random() * 80 + 80;
+        const baseW = Math.random() * 90 + 90;
+        const baseH = Math.random() * 90 + 90;
         this.width = baseW * GAME_SCALE;
         this.height = baseH * GAME_SCALE;
         this.screenY = Math.random() * (innerHeight - this.height);

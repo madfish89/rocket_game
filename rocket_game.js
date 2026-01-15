@@ -1,7 +1,7 @@
 
 
 const GAME_SCALE = 0.65;
-let VELOCITY_SCALE = 0.5; 
+let VELOCITY_SCALE = 0.4; 
 const BG_STAR_COUNT = 160;
 
 class Ship {

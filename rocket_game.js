@@ -1,6 +1,18 @@
 const GAME_SCALE = 0.65;
-let VELOCITY_SCALE = 0.41; 
+let VELOCITY_SCALE = 0.41;
 const BG_STAR_COUNT = 970;
+const MAX_LEVEL = 6;
+const WIN_SCORE = 9000;
+const LEVEL_THRESHOLD = 1200;
+
+const LEVELS = [
+    { name: 'Space', obsOuter: 'green', obsInner: '#c80000', starColor: 'white', bgStarColor: 'white' },
+    { name: 'Nebula', obsOuter: '#8a2be2', obsInner: '#00ffff', starColor: '#ffff00', bgStarColor: '#aaaaff' },
+    { name: 'Solar', obsOuter: 'orange', obsInner: 'yellow', starColor: 'cyan', bgStarColor: 'yellow' },
+    { name: 'Lava', obsOuter: 'red', obsInner: 'darkred', starColor: 'orange', bgStarColor: '#ff8800' },
+    { name: 'Ice', obsOuter: '#aaffff', obsInner: 'blue', starColor: '#ccffff', bgStarColor: '#add8e6' },
+    { name: 'fire', obsOuter: 'magenta', obsInner: 'purple', starColor: 'red', bgStarColor: '#ff4444' }
+];
 
 class Ship {
     constructor() {
@@ -35,12 +47,10 @@ class Ship {
     }
 
     update(keys) {
-        // Rotation
         const rotSpeed = 0.1;
         if (keys.ArrowLeft) this.angle -= rotSpeed;
         if (keys.ArrowRight) this.angle += rotSpeed;
 
-        // Thrust
         if (keys.ArrowUp) {
             const thrust = 0.5;
             this.vx += Math.cos(this.angle) * thrust;
@@ -50,26 +60,20 @@ class Ship {
             this.thrusting = false;
         }
 
-        // Gravity
         this.vy += 0.18;
-
-        // Drag (adjusted for frame rate)
         this.vx *= 0.991;
         this.vy *= 0.991;
 
-        // Max speed
         const maxSpeed = 15 * VELOCITY_SCALE;
         this.vx = Math.max(-maxSpeed, Math.min(maxSpeed, this.vx));
         this.vy = Math.max(-maxSpeed, Math.min(maxSpeed, this.vy));
 
-        // Position update
         this.worldX += this.vx;
         this.screenY += this.vy;
 
         this.camX = Math.max(0, this.worldX - innerWidth / 2);
         this.shipScreenX = this.worldX - this.camX;
 
-        // Horizontal bounce
         if (this.shipScreenX < this.halfW) {
             this.worldX = this.camX + this.halfW;
             this.vx *= -0.4;
@@ -79,7 +83,6 @@ class Ship {
             this.vx *= -0.4;
         }
 
-        // Bottom bounce
         if (this.screenY > innerHeight - this.halfH) {
             this.screenY = innerHeight - this.halfH;
             this.vy *= -0.3;
@@ -99,7 +102,6 @@ class Ship {
         ctx.save();
         ctx.translate(this.shipScreenX, this.screenY);
 
-        // Body
         const body = this.getRotatedPoints(this.bodyPoints);
         ctx.fillStyle = '#0064ff';
         ctx.beginPath();
@@ -113,7 +115,6 @@ class Ship {
         ctx.lineWidth = 2 * GAME_SCALE;
         ctx.stroke();
 
-        // Flame
         if (this.thrusting) {
             const flame = this.getRotatedPoints(this.flamePoints);
             ctx.fillStyle = 'orange';
@@ -148,9 +149,10 @@ class Obstacle {
     }
 
     draw(ctx) {
-        ctx.fillStyle = 'green';
+        const levelConfig = LEVELS[currentLevel - 1];
+        ctx.fillStyle = levelConfig.obsOuter;
         ctx.fillRect(this.screenX, this.screenY, this.width, this.height);
-        ctx.fillStyle = '#c80000';
+        ctx.fillStyle = levelConfig.obsInner;
         ctx.fillRect(this.screenX + 20 * GAME_SCALE, this.screenY + 20 * GAME_SCALE, this.width - 40 * GAME_SCALE, this.height - 40 * GAME_SCALE);
     }
 
@@ -182,7 +184,8 @@ class Star {
     }
 
     draw(ctx) {
-        ctx.fillStyle = 'white';
+        const levelConfig = LEVELS[currentLevel - 1];
+        ctx.fillStyle = levelConfig.starColor;
         ctx.beginPath();
         ctx.arc(this.screenX + this.size / 2, this.screenY + this.size / 2, this.size, 0, Math.PI * 2);
         ctx.fill();
@@ -197,9 +200,9 @@ class Star {
 
 // Game state
 let ship, obstacles, stars, bgStars;
-let score = 0, lives = 1, level = 1;
+let score = 0, lives = 1, currentLevel = 1;
 let obsSpawnTimer = 0, starSpawnTimer = 0;
-let gameOver = false, win = false;
+let gameOver = false, win = false, paused = false;
 let gameRunning = true;
 
 function resetGame() {
@@ -213,14 +216,15 @@ function resetGame() {
     ]);
     score = 0;
     lives = 1;
-    level = 1;
+    currentLevel = 1;
+    VELOCITY_SCALE = 0.41;
     obsSpawnTimer = 0;
     starSpawnTimer = 0;
     gameOver = false;
     win = false;
+    paused = false;
     gameRunning = true;
 }
-
 
 const canvas = document.createElement('canvas');
 document.body.appendChild(canvas);
@@ -233,11 +237,14 @@ function resize() {
 resize();
 window.addEventListener('resize', resize);
 
-// Input
 const keys = {};
 window.addEventListener('keydown', e => {
+    e.preventDefault();
     keys[e.key] = true;
-    if ((gameOver || win) && (e.key.toLowerCase() === 'r')) {
+    if (paused && e.key === ' ') {
+        paused = false;
+    }
+    if ((gameOver || win) && e.key.toLowerCase() === 'r') {
         resetGame();
     } else if ((gameOver || win) && (e.key === 'Escape' || e.key.toLowerCase() === 'q')) {
         gameRunning = false;
@@ -247,64 +254,55 @@ window.addEventListener('keyup', e => {
     keys[e.key] = false;
 });
 
-// Main loop
 let lastTime = 0;
 function loop(time) {
     if (!gameRunning) return;
 
     if (!lastTime) lastTime = time;
-    const dt = (time - lastTime) / 16.67; // Normalize to ~60fps
+    const dt = (time - lastTime) / 16.67;
     lastTime = time;
 
     ctx.fillStyle = 'black';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Background stars (fixed recompute sx after reset)
+    const levelConfig = LEVELS[currentLevel - 1];
+    ctx.fillStyle = levelConfig.bgStarColor;
     bgStars.forEach(star => {
         star[0] -= star[2];
         let sx = star[0] - ship.camX;
         if (sx < -10) {
             star[0] = ship.camX + canvas.width + Math.random() * 100;
             star[1] = Math.random() * canvas.height;
-            sx = star[0] - ship.camX; // Recompute after reset
+            sx = star[0] - ship.camX;
         }
-        ctx.fillStyle = 'white';
         ctx.fillRect(sx, star[1], 1, 1);
     });
 
-    if (!gameOver && !win) {
+    if (!gameOver && !win && !paused) {
         ship.update(keys);
 
-        // Die on ceiling
         if (ship.screenY - ship.halfH <= 0) {
             lives--;
             if (lives <= 0) gameOver = true;
         }
-                if (ship.screenx - ship.halfH <= 0) {
-            lives--;
-            if (lives <= 0) gameOver = true;
-        }
 
-        
-        obsSpawnTimer += 0.8 * VELOCITY_SCALE ;
-        let spawnRate = Math.max(35 - (level * 3.5), 15);
+        obsSpawnTimer += 0.82 * VELOCITY_SCALE;
+        let spawnRate = Math.max(42 - currentLevel * 3.7, 16);
         if (obsSpawnTimer > spawnRate) {
             const spawnX = ship.camX + canvas.width + (Math.random() * 100 + 50);
             obstacles.push(new Obstacle(spawnX));
             obsSpawnTimer = 0;
         }
 
-        // Spawn stars (less frequent)
-        starSpawnTimer += 1 * VELOCITY_SCALE;
-        const starSpawnThreshold = 70;
+        starSpawnTimer += 1.2 * VELOCITY_SCALE;
+        const starSpawnThreshold = 75;
         if (starSpawnTimer > starSpawnThreshold) {
             const spawnX = ship.camX + canvas.width + (Math.random() * 300 + 100);
             stars.push(new Star(spawnX));
             starSpawnTimer = 0;
         }
 
-        // Update obstacles (fixed speeds)
-        const obsSpeed = (5.5 + (level * 1.8)) * VELOCITY_SCALE;
+        const obsSpeed = (4.8 + currentLevel * 1.7) * VELOCITY_SCALE;
         obstacles = obstacles.filter(obs => {
             if (!obs.update(ship.camX, obsSpeed)) {
                 score += 20;
@@ -319,7 +317,6 @@ function loop(time) {
             return true;
         });
 
-        // Update stars (FIXED: correct filter logic)
         stars = stars.filter(star => {
             if (!star.update(ship.camX)) {
                 return false;
@@ -331,24 +328,24 @@ function loop(time) {
             star.draw(ctx);
             return true;
         });
-
-        // Level up
-        const newLevel = Math.min(1 + Math.floor(score / 1500), 3);
-        if (newLevel > level) level = newLevel;
-        // Win
-        if (score >= 4200) win = true;
     }
-    if (level == 1){
-        VELOCITY_SCALE = .41}
-    if (level == 2 ){
-        VELOCITY_SCALE = .55}
-    if (level == 3 );{
-        VELOCITY_SCALE = .71}
 
-    // Draw ship
+    const newLevel = Math.min(1 + Math.floor(score / LEVEL_THRESHOLD), MAX_LEVEL);
+    if (newLevel > currentLevel) {
+        currentLevel = newLevel;
+        VELOCITY_SCALE = 0.41 + (currentLevel - 1) * 0.07;
+        bgStars = Array.from({ length: BG_STAR_COUNT }, () => [
+            ship.camX + canvas.width + Math.random() * canvas.width,
+            Math.random() * canvas.height,
+            (Math.random() * 2.5 + 1) * VELOCITY_SCALE
+        ]);
+        paused = true;
+    }
+
+    if (score >= WIN_SCORE) win = true;
+
     ship.draw(ctx);
 
-    // UI (scaled)
     const fontSize = Math.floor(canvas.height / 20 * GAME_SCALE);
     const smallFontSize = Math.floor(canvas.height / 35 * GAME_SCALE);
     const uiMarginX = 30 * GAME_SCALE;
@@ -360,28 +357,36 @@ function loop(time) {
     ctx.textAlign = 'start';
     ctx.fillText(`Score: ${score}`, uiMarginX, uiMarginY);
     ctx.fillText(`Lives: ${lives}`, uiMarginX, uiMarginY + lineHeight);
-    ctx.fillText(`Level: ${level}`, uiMarginX, uiMarginY + lineHeight * 2);
+    ctx.fillText(`Level: ${currentLevel}`, uiMarginX, uiMarginY + lineHeight * 2);
 
-    if (gameOver || win) {
-        const bigFontSize = Math.floor(canvas.height / 15 * GAME_SCALE);
+    const bigFontSize = Math.floor(canvas.height / 15 * GAME_SCALE);
+    if (paused) {
+        ctx.fillStyle = 'lime';
+        ctx.font = `${bigFontSize}px Arial`;
+        ctx.textAlign = 'center';
+        ctx.fillText(`Level ${currentLevel}: ${LEVELS[currentLevel - 1].name}!`, canvas.width / 2, canvas.height / 2);
+        ctx.font = `${fontSize}px Arial`;
+        ctx.fillText('Press SPACE to Continue', canvas.width / 2, canvas.height / 2 + 50 * GAME_SCALE);
+        ctx.textAlign = 'start';
+    } else if (gameOver || win) {
         ctx.fillStyle = gameOver ? 'red' : 'lime';
         ctx.font = `${bigFontSize}px Arial`;
         ctx.textAlign = 'center';
-        ctx.fillText(gameOver ? 'GAME OVER!' : 'YOU WIN! Rocket Master!', canvas.width / 2, canvas.height / 2 - 80 * GAME_SCALE);
+        ctx.fillText(gameOver ? 'GAME OVER!' : 'YOU WIN! Rocket Legend!', canvas.width / 2, canvas.height / 2 - 80 * GAME_SCALE);
         ctx.fillStyle = 'white';
         ctx.font = `${fontSize}px Arial`;
         ctx.fillText(`Final Score: ${score}`, canvas.width / 2, canvas.height / 2 - 20 * GAME_SCALE);
         ctx.font = `${smallFontSize}px Arial`;
         ctx.fillText('R: Restart | ESC/Q: Quit', canvas.width / 2, canvas.height / 2 + 40 * GAME_SCALE);
         ctx.textAlign = 'start';
-        level = 1
     } else {
         ctx.font = `${smallFontSize}px Arial`;
         ctx.fillText('LEFT/RIGHT: Rotate | UP: Thrust', uiMarginX, canvas.height - 60 * GAME_SCALE);
         ctx.fillText('(Gravity pulls down! Dodge & Collect!)', uiMarginX, canvas.height - 30 * GAME_SCALE);
     }
-    
+
     requestAnimationFrame(loop);
 }
+
 resetGame();
 requestAnimationFrame(loop);

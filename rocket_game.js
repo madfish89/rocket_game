@@ -1,6 +1,6 @@
-const GAME_SCALE = 0.75;
-let VELOCITY_SCALE = 0.4; 
-const BG_STAR_COUNT = 170;
+const GAME_SCALE = 0.65;
+let VELOCITY_SCALE = 0.41; 
+const BG_STAR_COUNT = 970;
 
 class Ship {
     constructor() {
@@ -36,13 +36,13 @@ class Ship {
 
     update(keys) {
         // Rotation
-        const rotSpeed = 0.27 * VELOCITY_SCALE;
+        const rotSpeed = 0.1;
         if (keys.ArrowLeft) this.angle -= rotSpeed;
         if (keys.ArrowRight) this.angle += rotSpeed;
 
         // Thrust
         if (keys.ArrowUp) {
-            const thrust = 2 * VELOCITY_SCALE;
+            const thrust = 0.5;
             this.vx += Math.cos(this.angle) * thrust;
             this.vy += Math.sin(this.angle) * thrust;
             this.thrusting = true;
@@ -51,7 +51,7 @@ class Ship {
         }
 
         // Gravity
-        this.vy += 0.45 * VELOCITY_SCALE;
+        this.vy += 0.18;
 
         // Drag (adjusted for frame rate)
         this.vx *= 0.991;
@@ -221,7 +221,7 @@ function resetGame() {
     gameRunning = true;
 }
 
-// Canvas setup
+
 const canvas = document.createElement('canvas');
 document.body.appendChild(canvas);
 const ctx = canvas.getContext('2d');
@@ -286,7 +286,7 @@ function loop(time) {
         }
 
         
-        obsSpawnTimer += 0.8 * VELOCITY_SCALE;
+        obsSpawnTimer += 0.8 * VELOCITY_SCALE ;
         let spawnRate = Math.max(35 - (level * 3.5), 15);
         if (obsSpawnTimer > spawnRate) {
             const spawnX = ship.camX + canvas.width + (Math.random() * 100 + 50);
@@ -338,9 +338,20 @@ function loop(time) {
         // Win
         if (score >= 4200) win = true;
     }
-    if (level == 2 )
+    if (level == 1);
+        VELOCITY_SCALE = .41;
+        ctx.font = `${fontSize}px Arial`;
+        ctx.fillText('Level 1');
+    if (level == 2 );
+        VELOCITY_SCALE = .55;
+        ctx.font = `${fontSize}px Arial`;
+        ctx.fillText('Level 2');
+    if (level == 3 );
         VELOCITY_SCALE = .7;
-    // Draw ship (always)
+        ctx.font = `${fontSize}px Arial`;
+        ctx.fillText('Level 3');
+
+    // Draw ship
     ship.draw(ctx);
 
     // UI (scaled)
@@ -369,12 +380,13 @@ function loop(time) {
         ctx.font = `${smallFontSize}px Arial`;
         ctx.fillText('R: Restart | ESC/Q: Quit', canvas.width / 2, canvas.height / 2 + 40 * GAME_SCALE);
         ctx.textAlign = 'start';
+        level = 1
     } else {
         ctx.font = `${smallFontSize}px Arial`;
         ctx.fillText('LEFT/RIGHT: Rotate | UP: Thrust', uiMarginX, canvas.height - 60 * GAME_SCALE);
         ctx.fillText('(Gravity pulls down! Dodge & Collect!)', uiMarginX, canvas.height - 30 * GAME_SCALE);
     }
-
+    
     requestAnimationFrame(loop);
 }
 resetGame();

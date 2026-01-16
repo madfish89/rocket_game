@@ -131,6 +131,38 @@ class Ship {
     }
 }
 
+class Star {
+    constructor(spawnX) {
+        this.worldX = spawnX;
+        this.screenY = Math.random() * (innerHeight - 20 * GAME_SCALE);
+        const baseSpeed = Math.random() * 2 + 4.5;
+        this.speed = baseSpeed * VELOCITY_SCALE;
+        const baseSize = Math.random() * 4 + 4;
+        this.size = baseSize * GAME_SCALE;
+        this.screenX = 0;
+    }
+
+    update(camX) {
+        this.worldX -= this.speed;
+        this.screenX = this.worldX - camX;
+        return this.screenX + this.size > 0;
+    }
+
+    draw(ctx) {
+        const levelConfig = LEVELS[currentLevel - 1];
+        ctx.fillStyle = levelConfig.starColor;
+        ctx.beginPath();
+        ctx.arc(this.screenX + this.size / 2, this.screenY + this.size / 2, this.size, 0, Math.PI * 2);
+        ctx.fill();
+    }
+
+    collidesWith(ship) {
+        const dx = ship.shipScreenX - (this.screenX + this.size / 2);
+        const dy = ship.screenY - (this.screenY + this.size / 2);
+        return Math.hypot(dx, dy) < ship.halfW;
+    }
+}
+
 class Obstacle {
     constructor(spawnX) {
         this.worldX = spawnX;
@@ -166,35 +198,30 @@ class Obstacle {
     }
 }
 
-class Star {
-    constructor(spawnX) {
-        this.worldX = spawnX;
-        this.screenY = Math.random() * (innerHeight - 20 * GAME_SCALE);
-        const baseSpeed = Math.random() * 2 + 4.5;
-        this.speed = baseSpeed * VELOCITY_SCALE;
-        const baseSize = Math.random() * 4 + 4;
-        this.size = baseSize * GAME_SCALE;
-        this.screenX = 0;
-    }
+// ─── Simple particle trail only ────────────────────────────────
+let particles = [];
 
-    update(camX) {
-        this.worldX -= this.speed;
-        this.screenX = this.worldX - camX;
-        return this.screenX + this.size > 0;
+class Particle {
+    constructor(x, y, vx, vy, life, color) {
+        this.x = x;
+        this.y = y;
+        this.vx = vx;
+        this.vy = vy;
+        this.life = life;
+        this.maxLife = life;
+        this.color = color;
+        this.size = 2.5 * GAME_SCALE;
     }
-
+    update() {
+        this.x += this.vx;
+        this.y += this.vy;
+        this.life--;
+    }
     draw(ctx) {
-        const levelConfig = LEVELS[currentLevel - 1];
-        ctx.fillStyle = levelConfig.starColor;
-        ctx.beginPath();
-        ctx.arc(this.screenX + this.size / 2, this.screenY + this.size / 2, this.size, 0, Math.PI * 2);
-        ctx.fill();
-    }
-
-    collidesWith(ship) {
-        const dx = ship.shipScreenX - (this.screenX + this.size / 2);
-        const dy = ship.screenY - (this.screenY + this.size / 2);
-        return Math.hypot(dx, dy) < ship.halfW;
+        ctx.globalAlpha = this.life / this.maxLife * 0.8;
+        ctx.fillStyle = this.color;
+        ctx.fillRect(this.x - this.size/2, this.y - this.size/2, this.size, this.size);
+        ctx.globalAlpha = 1;
     }
 }
 
@@ -214,6 +241,7 @@ function resetGame() {
         Math.random() * innerHeight,
         (Math.random() * 2.5 + 1) * VELOCITY_SCALE
     ]);
+    particles = [];
     score = 0;
     lives = 1;
     currentLevel = 1;
@@ -286,6 +314,27 @@ function loop(time) {
             if (lives <= 0) gameOver = true;
         }
 
+        // ─── Small trail emission ───────────────────────────────
+        const backAngle = ship.angle + Math.PI;
+        const emitX = ship.shipScreenX + Math.cos(backAngle) * 18 * GAME_SCALE;
+        const emitY = ship.screenY + Math.sin(backAngle) * 18 * GAME_SCALE;
+
+        const trailColor = ship.thrusting ? '#ffcc66' : '#aaccff';
+        const emitChance = ship.thrusting ? 0.95 : 0.45;
+
+        if (Math.random() < emitChance) {
+            const spread = 0.35;
+            const speed = Math.random() * 1.4 + 0.4;
+            particles.push(new Particle(
+                emitX,
+                emitY,
+                Math.cos(backAngle + (Math.random() - 0.5) * spread) * speed,
+                Math.sin(backAngle + (Math.random() - 0.5) * spread) * speed,
+                28 + Math.random() * 18,
+                trailColor
+            ));
+        }
+
         obsSpawnTimer += 0.82 * VELOCITY_SCALE;
         let spawnRate = Math.max(42 - currentLevel * 3.7, 16);
         if (obsSpawnTimer > spawnRate) {
@@ -329,6 +378,14 @@ function loop(time) {
             return true;
         });
     }
+
+    // Update & draw trail particles
+    particles = particles.filter(p => {
+        p.update();
+        if (p.life <= 0) return false;
+        p.draw(ctx);
+        return true;
+    });
 
     const newLevel = Math.min(1 + Math.floor(score / LEVEL_THRESHOLD), MAX_LEVEL);
     if (newLevel > currentLevel) {

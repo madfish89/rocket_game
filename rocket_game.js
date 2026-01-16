@@ -1,4 +1,4 @@
-const GAME_SCALE = 0.5;
+const GAME_SCALE = 0.6;
 let VELOCITY_SCALE = 0.41;
 const BG_STAR_COUNT = 1070;
 const MAX_LEVEL = 6;
@@ -242,7 +242,7 @@ function resetGame() {
         (Math.random() * 2.5 + 1) * VELOCITY_SCALE
     ]);
     particles = [];
-    score = 1110;
+    score = 0;
     lives = 1;
     currentLevel = 1;
     VELOCITY_SCALE = 0.41;

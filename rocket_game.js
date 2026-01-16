@@ -200,7 +200,7 @@ class Star {
 
 // Game state
 let ship, obstacles, stars, bgStars;
-let score = 0, lives = 1, currentLevel = 1;
+let score = 1400, lives = 1, currentLevel = 1;
 let obsSpawnTimer = 0, starSpawnTimer = 0;
 let gameOver = false, win = false, paused = false;
 let gameRunning = true;

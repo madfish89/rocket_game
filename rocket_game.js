@@ -2,16 +2,16 @@ const GAME_SCALE = 0.65;
 let VELOCITY_SCALE = 0.41;
 const BG_STAR_COUNT = 970;
 const MAX_LEVEL = 6;
-const WIN_SCORE = 9000;
+const WIN_SCORE = 9200;
 const LEVEL_THRESHOLD = 1200;
 
 const LEVELS = [
-    { name: 'Space', obsOuter: 'green', obsInner: '#c80000', starColor: 'white', bgStarColor: 'white' },
-    { name: 'Nebula', obsOuter: '#8a2be2', obsInner: '#00ffff', starColor: '#ffff00', bgStarColor: '#aaaaff' },
-    { name: 'Solar', obsOuter: 'orange', obsInner: 'yellow', starColor: 'cyan', bgStarColor: 'yellow' },
-    { name: 'Lava', obsOuter: 'red', obsInner: 'darkred', starColor: 'orange', bgStarColor: '#ff8800' },
-    { name: 'Ice', obsOuter: '#aaffff', obsInner: 'blue', starColor: '#ccffff', bgStarColor: '#add8e6' },
-    { name: 'fire', obsOuter: 'magenta', obsInner: 'purple', starColor: 'red', bgStarColor: '#ff4444' }
+    { name: '', obsOuter: 'green', obsInner: '#c80000', starColor: 'white', bgStarColor: 'white' },
+    { name: '', obsOuter: '#8a2be2', obsInner: '#00ffff', starColor: '#ffff00', bgStarColor: '#aaaaff' },
+    { name: '', obsOuter: 'orange', obsInner: 'yellow', starColor: 'cyan', bgStarColor: 'yellow' },
+    { name: '', obsOuter: 'red', obsInner: 'darkred', starColor: 'orange', bgStarColor: '#ff8800' },
+    { name: '', obsOuter: '#aaffff', obsInner: 'blue', starColor: '#ccffff', bgStarColor: '#add8e6' },
+    { name: '', obsOuter: 'magenta', obsInner: 'purple', starColor: 'red', bgStarColor: '#ff4444' }
 ];
 
 class Ship {
@@ -214,7 +214,7 @@ function resetGame() {
         Math.random() * innerHeight,
         (Math.random() * 2.5 + 1) * VELOCITY_SCALE
     ]);
-    score = 0;
+    score = 1400;
     lives = 1;
     currentLevel = 1;
     VELOCITY_SCALE = 0.41;

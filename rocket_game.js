@@ -2,7 +2,7 @@ const GAME_SCALE = 0.6;
 let VELOCITY_SCALE = 0.41;
 const BG_STAR_COUNT = 1070;
 const MAX_LEVEL = 6;
-const WIN_SCORE = 9000;
+const WIN_SCORE = 8000;
 const LEVEL_THRESHOLD = 1200;
 
 const LEVELS = [
@@ -198,7 +198,7 @@ class Obstacle {
     }
 }
 
-// ─── Simple particle trail only ────────────────────────────────
+
 let particles = [];
 
 class Particle {
@@ -210,7 +210,7 @@ class Particle {
         this.life = life;
         this.maxLife = life;
         this.color = color;
-        this.size = 2.5 * GAME_SCALE;
+        this.size = 3 * GAME_SCALE;
     }
     update() {
         this.x += this.vx;
@@ -242,7 +242,7 @@ function resetGame() {
         (Math.random() * 2.5 + 1) * VELOCITY_SCALE
     ]);
     particles = [];
-    score = 5400;
+    score = 0;
     lives = 1;
     currentLevel = 1;
     VELOCITY_SCALE = 0.41;

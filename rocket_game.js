@@ -83,12 +83,12 @@ class Ship {
     }
 
     update(keys) {
-        const rotSpeed = 0.1;
+        const rotSpeed = 0.2;
         if (keys.ArrowLeft) this.angle -= rotSpeed;
         if (keys.ArrowRight) this.angle += rotSpeed;
 
         if (keys.ArrowUp) {
-            const thrust = 0.5;
+            const thrust = 0.6;
             this.vx += Math.cos(this.angle) * thrust;
             this.vy += Math.sin(this.angle) * thrust;
             this.thrusting = true;

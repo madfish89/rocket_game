@@ -1,5 +1,5 @@
 const GAME_SCALE = 0.6;
-let VELOCITY_SCALE = 0.51;
+let VELOCITY_SCALE = 0.42;
 const BG_STAR_COUNT = 1070;
 const MAX_LEVEL = 6;
 const WIN_SCORE = 4200;
@@ -8,10 +8,8 @@ const bg1 = new Audio('1.mp3');
 const bg2 = new Audio('2.mp3');
 const bg3 = new Audio('3.mp3');
 const bg4 = new Audio('4.mp3');
-const bg5 = new Audio('5.mp3');
-const bg6 = new Audio('6.mp3');
 
-const backgroundMusic = [bg1, bg2, bg3, bg4]; // only levels 1-4 have music
+const backgroundMusic = [bg1, bg2, bg3, bg4];
 backgroundMusic.forEach(track => { if (track) track.loop = true; });
 
 let hasStartedThrust = false; 

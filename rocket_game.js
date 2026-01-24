@@ -50,7 +50,7 @@ const LEVELS = [
 
 class Ship {
     constructor() {
-        this.worldX = innerWidth / 2;
+        this.worldX = innerWidth / 1.8;
         this.screenY = innerHeight / 2;
         this.camX = 0;
         this.shipScreenX = 0;
@@ -81,17 +81,17 @@ class Ship {
     }
 
     update(keys) {
-        const rotSpeed = 0.12;
+        const rotSpeed = 0.09;
         if (keys.ArrowLeft) this.angle -= rotSpeed;
         if (keys.ArrowRight) this.angle += rotSpeed;
 
         if (keys.ArrowUp) {
-            const thrust = 0.4;
+            const thrust = 0.36;
             this.vx += Math.cos(this.angle) * thrust;
             this.vy += Math.sin(this.angle) * thrust;
             this.thrusting = true;
 
-            // Start level 1 music on first thrust
+           
             if (currentLevel === 1 && !hasStartedThrust) {
                 hasStartedThrust = true;
                 backgroundMusic.forEach(t => { if (t && !t.paused) t.pause(); });
@@ -109,7 +109,7 @@ class Ship {
         this.vx *= 0.991;
         this.vy *= 0.991;
 
-        const maxSpeed = 15 * VELOCITY_SCALE;
+        const maxSpeed = 12 * VELOCITY_SCALE;
         this.vx = Math.max(-maxSpeed, Math.min(maxSpeed, this.vx));
         this.vy = Math.max(-maxSpeed, Math.min(maxSpeed, this.vy));
 
@@ -269,7 +269,6 @@ class Particle {
     }
 }
 
-// Game state
 let ship, obstacles, stars, bgStars;
 let score = 0, lives = 1, currentLevel = 1;
 let obsSpawnTimer = 0, starSpawnTimer = 0;
@@ -277,6 +276,25 @@ let gameOver = false, win = false, paused = false;
 let gameRunning = true;
 
 function resetGame() {
+    ship = new Ship();
+    obstacles = [];
+    stars = [];
+    bgStars = Array.from({ length: BG_STAR_COUNT }, () => [
+        Math.random() * innerWidth,
+        Math.random() * innerHeight,
+        (Math.random() * 2.5 + 1) * VELOCITY_SCALE
+    ]);
+    particles = [];
+    lives = 1;
+    obsSpawnTimer = 0;
+    starSpawnTimer = 0;
+    gameOver = false;
+    win = false;
+    paused = false;
+    gameRunning = true;
+    hasStartedThrust = false; 
+}
+function full_resetGame() {
     ship = new Ship();
     obstacles = [];
     stars = [];
@@ -317,7 +335,6 @@ window.addEventListener('keydown', e => {
     if (paused && e.key === ' ') {
         paused = false;
 
-        // Switch music for levels 2-4 when continuing
         if (currentLevel >= 2 && currentLevel <= 4) {
             backgroundMusic.forEach(t => { if (t && !t.paused) t.pause(); });
             const track = backgroundMusic[currentLevel - 1];
@@ -327,10 +344,11 @@ window.addEventListener('keydown', e => {
             }
         }
     }
-    if ((gameOver || win) && e.key.toLowerCase() === 'r') {
+    if ((gameOver) && e.key.toLowerCase() === 'r') {
         resetGame();
-    } else if ((gameOver || win) && (e.key === 'Escape' || e.key.toLowerCase() === 'q')) {
-        gameRunning = false;
+    } 
+    if ((win)&& e.key.toLowerCase() === 'r'){
+        full_resetGame();
     }
 });
 window.addEventListener('keyup', e => {
@@ -480,8 +498,7 @@ function loop(time) {
     ctx.font = `${fontSize}px Arial`;
     ctx.textAlign = 'start';
     ctx.fillText(`Score: ${score}`, uiMarginX, uiMarginY);
-    ctx.fillText(`Lives: ${lives}`, uiMarginX, uiMarginY + lineHeight);
-    ctx.fillText(`Level: ${currentLevel}`, uiMarginX, uiMarginY + lineHeight * 2);
+    ctx.fillText(`Level: ${currentLevel}`, uiMarginX, uiMarginY + lineHeight * 1);
 
     const bigFontSize = Math.floor(canvas.height / 15 * GAME_SCALE);
     if (paused) {
@@ -506,7 +523,6 @@ function loop(time) {
     } else {
         ctx.font = `${smallFontSize}px Arial`;
         ctx.fillText('LEFT/RIGHT: Rotate | UP: Thrust', uiMarginX, canvas.height - 60 * GAME_SCALE);
-        ctx.fillText('(Gravity pulls down! Dodge & Collect!)', uiMarginX, canvas.height - 30 * GAME_SCALE);
     }
 
     requestAnimationFrame(loop);

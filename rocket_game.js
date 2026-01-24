@@ -293,6 +293,12 @@ function resetGame() {
     paused = false;
     gameRunning = true;
     hasStartedThrust = false; 
+    if (currentLevel > 1.1){
+        score = currentLevel * LEVEL_THRESHOLD;
+    }
+    if (currentLevel === 1 ){
+        score = 0;
+    }
 }
 function full_resetGame() {
     ship = new Ship();

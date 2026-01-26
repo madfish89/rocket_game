@@ -106,8 +106,9 @@ class Ship {
         } else {
             this.thrusting = false;
         }
+        //gravity
+        this.vy += 0.12;
 
-        this.vy += 0.18;
         this.vx *= 0.991;
         this.vy *= 0.991;
 

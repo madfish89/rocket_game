@@ -8,6 +8,8 @@ const bg1 = new Audio('1.mp3');
 const bg2 = new Audio('2.mp3');
 const bg3 = new Audio('3.mp3');
 const bg4 = new Audio('4.mp3');
+let groundTimer = 0;
+const GROUND_TIME_LIMIT = 3500;
 
 const backgroundMusic = [bg1, bg2, bg3, bg4];
 backgroundMusic.forEach(track => { if (track) track.loop = true; });
@@ -285,6 +287,7 @@ function resetGame() {
         (Math.random() * 2.5 + 1) * VELOCITY_SCALE
     ]);
     particles = [];
+    groundTimer = 0;
     lives = 1;
     obsSpawnTimer = 0;
     starSpawnTimer = 0;
@@ -310,6 +313,7 @@ function full_resetGame() {
         (Math.random() * 2.5 + 1) * VELOCITY_SCALE
     ]);
     particles = [];
+    groundTimer = 0;
     score = 0;
     lives = 1;
     currentLevel = 1;
@@ -393,6 +397,17 @@ function loop(time) {
             if (lives <= 0) gameOver = true;
         }
 
+        const onGround = ship.screenY >= innerHeight - ship.halfH;
+
+        if (onGround) {
+            groundTimer += (time - lastTime);
+            if (groundTimer >= GROUND_TIME_LIMIT) {
+                resetGame(); 
+                return;
+            }
+        } else {
+            groundTimer = 0;
+        }
 
         const backAngle = ship.angle + Math.PI;
         const emitX = ship.shipScreenX + Math.cos(backAngle) * 22 * GAME_SCALE;
@@ -583,6 +598,7 @@ function loop(time) {
         ctx.textAlign = 'start';
     } else {
         ctx.font = `${smallFontSize}px Arial`;
+        ctx.fillText('do not touch the ceiling and do not stay on the floor for too long', uiMarginX, canvas.height - 50 * GAME_SCALE);
         ctx.fillText('LEFT/RIGHT: Rotate | UP: Thrust', uiMarginX, canvas.height - 60 * GAME_SCALE);
     }
 

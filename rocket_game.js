@@ -91,7 +91,7 @@ class Ship {
             this.vy += Math.sin(this.angle) * thrust;
             this.thrusting = true;
 
-           
+
             if (currentLevel === 1 && !hasStartedThrust) {
                 hasStartedThrust = true;
                 backgroundMusic.forEach(t => { if (t && !t.paused) t.pause(); });
@@ -292,11 +292,11 @@ function resetGame() {
     win = false;
     paused = false;
     gameRunning = true;
-    hasStartedThrust = false; 
-    if (currentLevel > 1.1){
+    hasStartedThrust = false;
+    if (currentLevel > 1.1) {
         score = (currentLevel - 1) * LEVEL_THRESHOLD;
     }
-    if (currentLevel === 1 ){
+    if (currentLevel === 1) {
         score = 0;
     }
 }
@@ -352,8 +352,8 @@ window.addEventListener('keydown', e => {
     }
     if ((gameOver) && e.key.toLowerCase() === 'r') {
         resetGame();
-    } 
-    if ((win)&& e.key.toLowerCase() === 'r'){
+    }
+    if ((win) && e.key.toLowerCase() === 'r') {
         full_resetGame();
     }
 });
@@ -417,7 +417,7 @@ function loop(time) {
         }
 
         obsSpawnTimer += 0.82 * VELOCITY_SCALE;
-        let spawnRate = Math.max(42 - currentLevel * 3.7, 16);
+        let spawnRate = Math.max(42 - (currentLevel + .8) * 3.7, 16);
         if (obsSpawnTimer > spawnRate) {
             const spawnX = ship.camX + canvas.width + (Math.random() * 100 + 50);
             obstacles.push(new Obstacle(spawnX));
@@ -483,36 +483,42 @@ function loop(time) {
             if (!star.update(ship.camX)) {
                 return false;
             }
-            if (currentLevel === 1){
-            if (star.collidesWith(ship)) {
-                score += 100;
-                return false;
-            }}
-            if (currentLevel === 2){
-            if (star.collidesWith(ship)) {
-                score += 70;
-                return false;
-            }}
-            if (currentLevel === 3){
-            if (star.collidesWith(ship)) {
-                score += 60;
-                return false;
-            }}
-            if (currentLevel === 4){
-            if (star.collidesWith(ship)) {
-                score += 40;
-                return false;
-            }}
-            if (currentLevel === 5){
-            if (star.collidesWith(ship)) {
-                score += 20;
-                return false;
-            }}
-            if (currentLevel === 6){
-            if (star.collidesWith(ship)) {
-                score += 10;
-                return false;
-            }}
+            if (currentLevel === 1) {
+                if (star.collidesWith(ship)) {
+                    score += 100;
+                    return false;
+                }
+            }
+            if (currentLevel === 2) {
+                if (star.collidesWith(ship)) {
+                    score += 70;
+                    return false;
+                }
+            }
+            if (currentLevel === 3) {
+                if (star.collidesWith(ship)) {
+                    score += 60;
+                    return false;
+                }
+            }
+            if (currentLevel === 4) {
+                if (star.collidesWith(ship)) {
+                    score += 50;
+                    return false;
+                }
+            }
+            if (currentLevel === 5) {
+                if (star.collidesWith(ship)) {
+                    score += 40;
+                    return false;
+                }
+            }
+            if (currentLevel === 6) {
+                if (star.collidesWith(ship)) {
+                    score += 30;
+                    return false;
+                }
+            }
             star.draw(ctx);
             return true;
         });
@@ -581,8 +587,7 @@ function loop(time) {
     }
 
     requestAnimationFrame(loop);
+
 }
-
-
 resetGame();
 requestAnimationFrame(loop);

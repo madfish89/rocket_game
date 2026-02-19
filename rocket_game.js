@@ -350,7 +350,7 @@ window.addEventListener('keydown', e => {
     if (paused && e.key === ' ') {
         paused = false;
 
-        if (currentLevel >= 2 && currentLevel <= 4) {
+        if (currentLevel >= 2 && currentLevel <= 6) {
             backgroundMusic.forEach(t => { if (t && !t.paused) t.pause(); });
             const track = backgroundMusic[currentLevel - 1];
             if (track) {

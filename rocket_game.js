@@ -19,6 +19,15 @@ const bg6 = new Audio('6.mp3');
 const backgroundMusic = [bg1, bg2, bg3, bg4, bg5, bg6];
 backgroundMusic.forEach(track => { if (track) track.loop = true; });
 
+let isMuted = false;
+const muteBtn = document.getElementById('mute');
+muteBtn.addEventListener('click', () => {
+    isMuted = !isMuted;
+    const vol = isMuted ? 0 : 1;
+    backgroundMusic.forEach(t => { if (t) t.volume = vol; });
+    muteBtn.textContent = isMuted ? 'Unmute' : 'Mute';
+});
+
 let hasStartedThrust = false;
 
 function play1() {

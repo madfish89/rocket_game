@@ -1,14 +1,19 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <link rel="stylesheet" href="style.css">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Rocket Game</title>
     <style>
         body, html { margin:0; padding:0; overflow:hidden; background:black; }
         canvas { display:block; }
+        #mute { position: absolute; top: 12px; right: 12px; z-index: 9999;background-color: rgb(7, 2, 64); transition: all 0.2s ease; border: none; padding: 10px 20px; cursor: pointer;color: black;border-radius: 50px; }
+        #mute:hover { scale: 1.1; background-color: rgb(26, 26, 63); }
+        #mute:active { scale: 0.8; background-color: rgb(26, 26, 63); }
     </style>
 </head>
 <body>
+    <button id="mute" class="bg-gradient-to-br from-slate-950 via-blue-950 to-slate-950 text-white min-h-screen font-sans">Mute</button>
     <script src="rocket_game.js" ></script>
 </body>

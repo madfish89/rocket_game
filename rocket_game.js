@@ -98,10 +98,16 @@ class Ship {
 
     update(keys, dt) {
         const rotSpeed = 0.09 * dt;
-        if (keys.ArrowLeft) this.angle -= rotSpeed;
-        if (keys.ArrowRight) this.angle += rotSpeed;
 
-        if (keys.ArrowUp) {
+        // Keyboard + Touch support
+        const rotatingLeft  = keys.ArrowLeft || touchLeft;
+        const rotatingRight = keys.ArrowRight || touchRight;
+        const thrusting     = keys.ArrowUp || touchThrust;
+
+        if (rotatingLeft)  this.angle -= rotSpeed;
+        if (rotatingRight) this.angle += rotSpeed;
+
+        if (thrusting) {
             const thrust = 0.36 * dt;
             this.vx += Math.cos(this.angle) * thrust;
             this.vy += Math.sin(this.angle) * thrust;
@@ -290,6 +296,11 @@ let score = 0, lives = 1, currentLevel = 1;
 let obsSpawnTimer = 0, starSpawnTimer = 0;
 let groundTimer = 0;
 let gameOver = false, win = false, paused = false, gameRunning = true;
+
+// Mobile touch variables (added here so they're available everywhere)
+let touchLeft = false;
+let touchRight = false;
+let touchThrust = false;
 
 function resetGame() {
     ship = new Ship();
@@ -536,7 +547,7 @@ function loop(timestamp) {
         ctx.textAlign = 'center';
         ctx.fillText(`Level ${currentLevel}: ${LEVELS[currentLevel - 1].name}!`, canvas.width / 2, canvas.height / 2);
         ctx.font = `${fontSize}px Arial`;
-        ctx.fillText('Press SPACE to Continue', canvas.width / 2, canvas.height / 2 + 50 * GAME_SCALE);
+        ctx.fillText('TAP SCREEN to Continue', canvas.width / 2, canvas.height / 2 + 50 * GAME_SCALE);
         ctx.textAlign = 'start';
     } else if (gameOver || win) {
         ctx.fillStyle = gameOver ? 'red' : 'lime';
@@ -547,7 +558,7 @@ function loop(timestamp) {
         ctx.font = `${fontSize}px Arial`;
         ctx.fillText(`Final Score: ${score}`, canvas.width / 2, canvas.height / 2 - 20 * GAME_SCALE);
         ctx.font = `${smallFontSize}px Arial`;
-        ctx.fillText('R: Restart | ESC/Q: Quit', canvas.width / 2, canvas.height / 2 + 40 * GAME_SCALE);
+        ctx.fillText('TAP SCREEN to Restart', canvas.width / 2, canvas.height / 2 + 40 * GAME_SCALE);
         ctx.textAlign = 'start';
     } else {
         ctx.font = `${smallFontSize}px Arial`;
@@ -557,11 +568,8 @@ function loop(timestamp) {
 
     requestAnimationFrame(loop);
 }
-// ==================== MOBILE TOUCH SUPPORT ====================
 
-let touchLeft = false;
-let touchRight = false;
-let touchThrust = false;
+// ==================== MOBILE TOUCH SUPPORT ====================
 
 function setupTouchControls() {
     const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
@@ -602,76 +610,33 @@ function setupTouchControls() {
     btnThrust.addEventListener('mouseup', () => touchThrust = false);
 }
 
-// Modify the existing key handling to also check touch
-const originalKeydown = window.addEventListener;
-window.addEventListener('keydown', e => {
-    // ... (your existing keydown code remains unchanged)
-});
+// Tap anywhere on the canvas (away from the control buttons) to resume from level pause or restart after game over/win
+function handleGameStateTouch(e) {
+    if (paused) {
+        e.preventDefault();
+        paused = false;
 
-// Update Ship.update() to support touch controls
-// Find the Ship class and replace the update method with this improved version:
-
-// Replace the entire Ship.update function with this:
-
-Ship.prototype.update = function(keys, dt) {
-    const rotSpeed = 0.09 * dt;
-
-    // Keyboard + Touch support
-    const rotatingLeft  = keys.ArrowLeft || touchLeft;
-    const rotatingRight = keys.ArrowRight || touchRight;
-    const thrusting     = keys.ArrowUp || touchThrust;
-
-    if (rotatingLeft)  this.angle -= rotSpeed;
-    if (rotatingRight) this.angle += rotSpeed;
-
-    if (thrusting) {
-        const thrust = 0.36 * dt;
-        this.vx += Math.cos(this.angle) * thrust;
-        this.vy += Math.sin(this.angle) * thrust;
-        this.thrusting = true;
-
-        if (currentLevel === 1 && !hasStartedThrust) {
-            hasStartedThrust = true;
+        if (currentLevel >= 2 && currentLevel <= 6) {
             backgroundMusic.forEach(t => { if (t && !t.paused) t.pause(); });
-            const track = backgroundMusic[0];
+            const track = backgroundMusic[currentLevel - 1];
             if (track) {
                 track.currentTime = 0;
                 track.play().catch(err => console.log("Audio play failed:", err));
             }
         }
-    } else {
-        this.thrusting = false;
+    } else if (gameOver || win) {
+        e.preventDefault();
+        if (win) {
+            full_resetGame();
+        } else {
+            resetGame();
+        }
     }
+}
+canvas.addEventListener('touchstart', handleGameStateTouch);
+canvas.addEventListener('click', handleGameStateTouch);   // also works with mouse on desktop
 
-    // gravity
-    this.vy += 0.12 * dt;
-
-    this.vx *= Math.pow(0.991, dt);
-    this.vy *= Math.pow(0.991, dt);
-
-    const maxSpeed = 12 * VELOCITY_SCALE;
-    this.vx = Math.max(-maxSpeed, Math.min(maxSpeed, this.vx));
-    this.vy = Math.max(-maxSpeed, Math.min(maxSpeed, this.vy));
-
-    this.worldX += this.vx * dt;
-    this.screenY += this.vy * dt;
-
-    this.camX = Math.max(0, this.worldX - innerWidth / 2);
-    this.shipScreenX = this.worldX - this.camX;
-
-    if (this.shipScreenX < this.halfW) {
-        this.worldX = this.camX + this.halfW;
-        this.vx *= -0.4;
-    }
-    if (this.shipScreenX > innerWidth - this.halfW) {
-        this.worldX = this.camX + (innerWidth - this.halfW);
-        this.vx *= -0.4;
-    }
-
-    if (this.screenY > innerHeight - this.halfH) {
-        this.screenY = innerHeight - this.halfH;
-        this.vy *= -0.3;
-    }
-};
+// ==================== START GAME ====================
+setupTouchControls();
 resetGame();
 requestAnimationFrame(loop);

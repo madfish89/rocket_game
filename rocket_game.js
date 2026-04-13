@@ -557,5 +557,121 @@ function loop(timestamp) {
 
     requestAnimationFrame(loop);
 }
+// ==================== MOBILE TOUCH SUPPORT ====================
+
+let touchLeft = false;
+let touchRight = false;
+let touchThrust = false;
+
+function setupTouchControls() {
+    const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    if (!isTouchDevice) return;
+
+    document.getElementById('touchControls').style.display = 'block';
+
+    const btnLeft = document.getElementById('btnLeft');
+    const btnRight = document.getElementById('btnRight');
+    const btnThrust = document.getElementById('btnThrust');
+
+    // Prevent default touch behaviors
+    function preventDefault(e) {
+        e.preventDefault();
+    }
+
+    // Left button
+    btnLeft.addEventListener('touchstart', (e) => { e.preventDefault(); touchLeft = true; });
+    btnLeft.addEventListener('touchend',   (e) => { e.preventDefault(); touchLeft = false; });
+    btnLeft.addEventListener('touchcancel',(e) => { e.preventDefault(); touchLeft = false; });
+
+    // Right button
+    btnRight.addEventListener('touchstart', (e) => { e.preventDefault(); touchRight = true; });
+    btnRight.addEventListener('touchend',   (e) => { e.preventDefault(); touchRight = false; });
+    btnRight.addEventListener('touchcancel',(e) => { e.preventDefault(); touchRight = false; });
+
+    // Thrust button
+    btnThrust.addEventListener('touchstart', (e) => { e.preventDefault(); touchThrust = true; });
+    btnThrust.addEventListener('touchend',   (e) => { e.preventDefault(); touchThrust = false; });
+    btnThrust.addEventListener('touchcancel',(e) => { e.preventDefault(); touchThrust = false; });
+
+    // Also support mouse for testing on desktop
+    btnLeft.addEventListener('mousedown', () => touchLeft = true);
+    btnLeft.addEventListener('mouseup', () => touchLeft = false);
+    btnRight.addEventListener('mousedown', () => touchRight = true);
+    btnRight.addEventListener('mouseup', () => touchRight = false);
+    btnThrust.addEventListener('mousedown', () => touchThrust = true);
+    btnThrust.addEventListener('mouseup', () => touchThrust = false);
+}
+
+// Modify the existing key handling to also check touch
+const originalKeydown = window.addEventListener;
+window.addEventListener('keydown', e => {
+    // ... (your existing keydown code remains unchanged)
+});
+
+// Update Ship.update() to support touch controls
+// Find the Ship class and replace the update method with this improved version:
+
+// Replace the entire Ship.update function with this:
+
+Ship.prototype.update = function(keys, dt) {
+    const rotSpeed = 0.09 * dt;
+
+    // Keyboard + Touch support
+    const rotatingLeft  = keys.ArrowLeft || touchLeft;
+    const rotatingRight = keys.ArrowRight || touchRight;
+    const thrusting     = keys.ArrowUp || touchThrust;
+
+    if (rotatingLeft)  this.angle -= rotSpeed;
+    if (rotatingRight) this.angle += rotSpeed;
+
+    if (thrusting) {
+        const thrust = 0.36 * dt;
+        this.vx += Math.cos(this.angle) * thrust;
+        this.vy += Math.sin(this.angle) * thrust;
+        this.thrusting = true;
+
+        if (currentLevel === 1 && !hasStartedThrust) {
+            hasStartedThrust = true;
+            backgroundMusic.forEach(t => { if (t && !t.paused) t.pause(); });
+            const track = backgroundMusic[0];
+            if (track) {
+                track.currentTime = 0;
+                track.play().catch(err => console.log("Audio play failed:", err));
+            }
+        }
+    } else {
+        this.thrusting = false;
+    }
+
+    // gravity
+    this.vy += 0.12 * dt;
+
+    this.vx *= Math.pow(0.991, dt);
+    this.vy *= Math.pow(0.991, dt);
+
+    const maxSpeed = 12 * VELOCITY_SCALE;
+    this.vx = Math.max(-maxSpeed, Math.min(maxSpeed, this.vx));
+    this.vy = Math.max(-maxSpeed, Math.min(maxSpeed, this.vy));
+
+    this.worldX += this.vx * dt;
+    this.screenY += this.vy * dt;
+
+    this.camX = Math.max(0, this.worldX - innerWidth / 2);
+    this.shipScreenX = this.worldX - this.camX;
+
+    if (this.shipScreenX < this.halfW) {
+        this.worldX = this.camX + this.halfW;
+        this.vx *= -0.4;
+    }
+    if (this.shipScreenX > innerWidth - this.halfW) {
+        this.worldX = this.camX + (innerWidth - this.halfW);
+        this.vx *= -0.4;
+    }
+
+    if (this.screenY > innerHeight - this.halfH) {
+        this.screenY = innerHeight - this.halfH;
+        this.vy *= -0.3;
+    }
+};
 resetGame();
 requestAnimationFrame(loop);

@@ -547,7 +547,7 @@ function loop(timestamp) {
         ctx.textAlign = 'center';
         ctx.fillText(`Level ${currentLevel}: ${LEVELS[currentLevel - 1].name}!`, canvas.width / 2, canvas.height / 2);
         ctx.font = `${fontSize}px Arial`;
-        ctx.fillText('TAP SCREEN to Continue', canvas.width / 2, canvas.height / 2 + 50 * GAME_SCALE);
+        ctx.fillText('tap screen/press space to Continue', canvas.width / 2, canvas.height / 2 + 50 * GAME_SCALE);
         ctx.textAlign = 'start';
     } else if (gameOver || win) {
         ctx.fillStyle = gameOver ? 'red' : 'lime';
@@ -558,7 +558,7 @@ function loop(timestamp) {
         ctx.font = `${fontSize}px Arial`;
         ctx.fillText(`Final Score: ${score}`, canvas.width / 2, canvas.height / 2 - 20 * GAME_SCALE);
         ctx.font = `${smallFontSize}px Arial`;
-        ctx.fillText('TAP SCREEN to Restart', canvas.width / 2, canvas.height / 2 + 40 * GAME_SCALE);
+        ctx.fillText('tap screen/press r to Restart', canvas.width / 2, canvas.height / 2 + 40 * GAME_SCALE);
         ctx.textAlign = 'start';
     } else {
         ctx.font = `${smallFontSize}px Arial`;
